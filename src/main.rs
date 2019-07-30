@@ -7,21 +7,38 @@ use std::io;
 use std::io::{BufRead, BufReader};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
+use tempfile::Builder;
+use tempfile::NamedTempFile;
 use time::Tm;
 use todo::*;
 fn main() {
     let mut config = false;
-    // Write
-    let mut tmpfile: File = tempfile::tempfile().unwrap();
-    write!(tmpfile, "Hello World!").unwrap();
+    let mut tmp_index_file = NamedTempFile::new().unwrap();
+    let mut tmp_file = NamedTempFile::new().unwrap();
+    // [test]
+    // let mut tmpfile = NamedTempFile::new().unwrap();
+    // write!(tmpfile, "abcde").unwrap();
+    // tmpfile.seek(SeekFrom::Start(0)).unwrap();
+    // let mut buf = String::new();s
+    // tmpfile.read_to_string(&mut buf).unwrap();
+    // assert_eq!("abcde", buf);
 
-    // Seek to start
-    tmpfile.seek(SeekFrom::Start(0)).unwrap();
+    // EXAMPLE
+    // Create a named temporary file and open an independent file handle:
+    // let text = "Brian was here. Briefly.";
+    // // Create a file inside of `std::env::temp_dir()`.
+    // let mut file1 = NamedTempFile::new().unwrap();
 
-    // Read
-    let mut buf = String::new();
-    tmpfile.read_to_string(&mut buf).unwrap();
-    assert_eq!("Hello World!", buf);
+    // // Re-open it.
+    // let mut file2 = file1.reopen().unwrap();
+
+    // // Write some test data to the first handle.
+    // file1.write_all(text.as_bytes()).unwrap();
+
+    // // Read the test data using the second handle.
+    // let mut buf = String::new();
+    // file2.read_to_string(&mut buf).unwrap();
+    // assert_eq!(buf, text);
 
     // todos will be saved here
     if !Path::new("todo.txt").exists() {
@@ -84,7 +101,33 @@ fn main() {
             || matches.value_of("config").unwrap() == "f"
         {
             if let Some(path) = matches.value_of("path") {
+                // temporary data will be saved here
+                let mut tmp_file = Builder::new()
+                    .prefix(path)
+                    .suffix(".txt")
+                    .rand_bytes(5)
+                    .tempfile()
+                    .unwrap();
+                //write!(tmp_file, "abcde").unwrap();
+                //tmp_file.seek(SeekFrom::Start(0)).unwrap();
+                //let mut buf = String::new();
+                //tmp_file.read_to_string(&mut buf).unwrap();
+                //assert_eq!("abcde", buf);
+
+                // path of the temporary file
                 println!("changing config file to: {}", path);
+                // temporary index will be saved here
+                tmp_index_file = Builder::new()
+                    .prefix("tmp_index")
+                    .suffix(".txt")
+                    .tempfile()
+                    .unwrap();
+
+                // initialize the content of tmp_index_file
+                tmp_index_file.seek(SeekFrom::Start(0)).unwrap();
+
+                write!(tmp_index_file, "0").unwrap();
+                tmp_index_file.seek(SeekFrom::Start(0)).unwrap();
             }
         } else {
             // config is present but its value is wrong
@@ -99,25 +142,54 @@ fn main() {
     // add cmd
     if let Some(matches) = matches.subcommand_matches("add") {
         if matches.is_present("text") {
-            let x = fs::read_to_string("index.txt").expect("Something went wrong reading the file");
+            if !config {
+                let x =
+                    fs::read_to_string("index.txt").expect("Something went wrong reading the file");
 
-            let my_int = x.parse::<i32>().unwrap() + 1;
-            let mut ofile = File::create("index.txt").expect("unable to create file");
-            let s = my_int.to_string();
-            ofile.write_all(s.as_bytes()).expect("unable to write");
-            let mut file = OpenOptions::new()
-                .write(true)
-                .append(true)
-                .open("todo.txt")
-                .unwrap();
+                let my_int = x.parse::<i32>().unwrap() + 1;
+                let mut ofile = File::create("index.txt").expect("unable to create file");
+                let s = my_int.to_string();
+                ofile.write_all(s.as_bytes()).expect("unable to write");
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .append(true)
+                    .open("todo.txt")
+                    .unwrap();
 
-            let mut content: String = String::new();
-            content.push_str(&x);
-            content.push_str(". ");
-            content.push_str(matches.value_of("text").unwrap());
-            content.push_str("\n");
-            file.write(content.as_bytes()).expect("failed");
-            println!("added todo with id: {}", x);
+                let mut content: String = String::new();
+                content.push_str(&x);
+                content.push_str(". ");
+                content.push_str(matches.value_of("text").unwrap());
+                content.push_str("\n");
+                file.write(content.as_bytes()).expect("failed");
+                println!("added todo with id: {}", x);
+            } else {
+                let mut buf = String::new();
+                tmp_index_file.read_to_string(&mut buf).unwrap();
+                println!("{}", buf);
+
+                // write on a NamedTempFile
+                let x =
+                    fs::read_to_string("index.txt").expect("Something went wrong reading the file");
+
+                let my_int = x.parse::<i32>().unwrap() + 1;
+                let mut ofile = File::create("index.txt").expect("unable to create file");
+                let s = my_int.to_string();
+                ofile.write_all(s.as_bytes()).expect("unable to write");
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .append(true)
+                    .open("todo.txt")
+                    .unwrap();
+
+                let mut content: String = String::new();
+                content.push_str(&x);
+                content.push_str(". ");
+                content.push_str(matches.value_of("text").unwrap());
+                content.push_str("\n");
+                file.write(content.as_bytes()).expect("failed");
+                println!("added todo with id: {}", x);
+            }
         } else {
             println!("Printing normally...");
         }

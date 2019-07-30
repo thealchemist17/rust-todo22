@@ -44,6 +44,35 @@ fn it_list() {
 
     clean();
 }
+#[test]
+fn it_edit() {
+    clean();
+    let mut file = std::fs::File::create("todo.txt").unwrap();
+    file.write("0. bufu\n".as_bytes()).expect("failed to write");
+    let cmd = Command::cargo_bin("rust-todo22")
+        .unwrap()
+        .arg("edit")
+        .arg("0")
+        .unwrap();
+    let x = "abcde";
+    clean();
+}
+#[test]
+fn it_remove() {}
+#[test]
+fn it_clear() {
+    clean();
+
+    let cmd = Command::cargo_bin("rust-todo22")
+        .unwrap()
+        .arg("clear")
+        .unwrap();
+    let todo_content = fs::read_to_string("todo.txt").expect("Failed to open file");
+    assert_eq!(todo_content, "".to_string());
+    let index_content = fs::read_to_string("index.txt").expect("Failed to open file");
+    assert_eq!(index_content, "0".to_string());
+    clean();
+}
 
 fn clean() {
     match fs::remove_file("todo.txt") {

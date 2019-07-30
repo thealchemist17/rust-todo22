@@ -3,7 +3,7 @@
 - Use [clap](https://github.com/clap-rs/clap) to parse command line arguments
 - Add an argument `-f` to specify filename using clap library
 - Now try to make tests work again by specifing a named temporary file using [tempfile](https://github.com/Stebalien/tempfile)
-- Add tests for remove, edit and clear
+- Add tests for edit, remove and clear
 
 *Step 2*
 - Define a struct that represents a Todo entry
