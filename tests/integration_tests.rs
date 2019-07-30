@@ -31,6 +31,20 @@ fn it_add_todo() {
     clean();
 }
 
+#[test]
+fn it_list() {
+    clean();
+    let mut file = std::fs::File::create("todo.txt").unwrap();
+    file.write("1. bufu\n".as_bytes()).expect("failed to write");
+    let cmd = Command::cargo_bin("rust-todo22")
+        .unwrap()
+        .arg("list")
+        .unwrap();
+    cmd.assert().stdout("1. bufu\n");
+
+    clean();
+}
+
 fn clean() {
     match fs::remove_file("todo.txt") {
         Ok(_) => (),
