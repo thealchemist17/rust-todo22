@@ -1,14 +1,10 @@
 use clap::{App, Arg, SubCommand};
-use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
+use std::io::Write;
 use std::io::{BufRead, BufReader};
-use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
-use tempfile::Builder;
-use tempfile::NamedTempFile;
-use time::Tm;
 
 fn main() {
     let matches = App::new("rust-todo22")
@@ -48,8 +44,7 @@ fn main() {
         let mut id = 0;
         for line in f.lines() {
             match line {
-                Ok(line) => {
-                    let split = line.split(".");
+                Ok(_) => {
                     id = id + 1;
                 }
                 Err(_) => (),
@@ -144,13 +139,11 @@ fn main() {
     }
 
     // clear cmd
-    if let Some(matches) = matches.subcommand_matches("clear") {
+    if let Some(_) = matches.subcommand_matches("clear") {
         File::create(path).expect("unable to create file");
     }
-
-    let time = time::now();
 }
 
-fn get_time(x: Tm) -> String {
-    format!("{}:{}:{}", x.tm_hour, x.tm_min, x.tm_sec)
-}
+// fn get_time(x: Tm) -> String {
+//     format!("{}:{}:{}", x.tm_hour, x.tm_min, x.tm_sec)
+// }
