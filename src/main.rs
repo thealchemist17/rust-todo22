@@ -99,12 +99,9 @@ fn main() {
         if matches.value_of("config").unwrap() == "config"
             || matches.value_of("config").unwrap() == "f"
         {
-            println!("ciao");
             if let Some(path) = matches.value_of("path") {
                 c.push_str(path);
                 c.push_str(".txt");
-                println!("{}", c);
-                println!("{}", c);
                 if !Path::new(&c).exists() {
                     File::create(&c).unwrap();
                 }
@@ -124,7 +121,6 @@ fn main() {
         if !config {
             // cargo run add todo
             let x = fs::read_to_string("index.txt").expect("Something went wrong reading the file");
-
             let my_int = x.parse::<i32>().unwrap() + 1;
             let mut ofile = File::create("index.txt").expect("unable to create file");
             let s = my_int.to_string();
@@ -143,35 +139,27 @@ fn main() {
             file.write(content.as_bytes()).expect("failed");
             println!("added todo with id: {}", x);
         } else {
-            println!("config");
-            // cargo run config <tmp_file> add <todo>
+            // cargo run config <path> add <todo>
+            // reading index
             let x = fs::read_to_string("index.txt").expect("Something went wrong reading the file");
-            // reading index from tmp_index_file
 
             let my_int = x.parse::<i32>().unwrap() + 1;
             let mut ofile = File::create("index.txt").expect("unable to create file");
             let s = my_int.to_string();
             ofile.write_all(s.as_bytes()).expect("unable to write");
-
+            // reading todo
             let z = matches.value_of("text").unwrap();
-            println!("config");
-            // getting todo message
-            // write on a NamedTempFile add
-
+            // writing on specified file
             let mut content = String::new();
             content.push_str(&x);
             content.push_str(". ");
             content.push_str(z);
             content.push_str("\n");
-            println!("config");
-            // write on path
-            println!("{}", c);
             let mut file = OpenOptions::new()
                 .write(true)
                 .append(true)
                 .open(&c)
                 .unwrap();
-            println!("config");
             file.write(content.as_bytes()).expect("failed");
             println!("added todo with id: {}", x);
         }
@@ -179,11 +167,24 @@ fn main() {
 
     // list cmd
     if let Some(_) = matches.subcommand_matches("list") {
-        let f = File::open("todo.txt").expect("Unable to open file");
-        let f = BufReader::new(f);
-        for line in f.lines() {
-            let line = line.expect("Unable to read line");
-            println!("{}", line);
+        if !config {
+            let f = File::open("todo.txt").expect("Unable to open file");
+            let f = BufReader::new(f);
+            for line in f.lines() {
+                let line = line.expect("Unable to read line");
+                println!("{}", line);
+            }
+        } else {
+            // cargo run config <path> list
+            let mut st = String::new();
+            st.push_str(matches.value_of("path").unwrap());
+            st.push_str(".txt");
+            let f = File::open(st).expect("Unable to open file");
+            let f = BufReader::new(f);
+            for line in f.lines() {
+                let line = line.expect("Unable to read line");
+                println!("{}", line);
+            }
         }
     }
 
