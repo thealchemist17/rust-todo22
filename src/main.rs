@@ -67,6 +67,8 @@ fn main() {
         content.push_str(matches.value_of("text").unwrap());
         content.push_str("\n");
         file.write(content.as_bytes()).expect("failed");
+
+        println!("added todo with id: {}", id);
     }
 
     // list cmd
@@ -97,10 +99,10 @@ fn main() {
                             new_file.push_str(id);
                             new_file.push_str(". ");
                             new_file.push_str(&new_message.trim());
-                            new_file.push_str(" \n");
+                            new_file.push_str("\n");
                         } else {
                             new_file.push_str(&line);
-                            new_file.push_str(" \n");
+                            new_file.push_str("\n");
                         }
                     }
 
@@ -136,6 +138,8 @@ fn main() {
             }
             let mut ofile = File::create(path).expect("unable to create file");
             ofile.write_all(c.as_bytes()).expect("unable to write");
+
+            println!("removed todo with id: {}", id);
         }
     }
 
