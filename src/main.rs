@@ -40,30 +40,7 @@ fn main() {
     }
     // add cmd
     if let Some(matches) = matches.subcommand_matches("add") {
-        let f = BufReader::new(File::open(path).unwrap());
-        let mut id = 0;
-        for line in f.lines() {
-            match line {
-                Ok(_) => {
-                    id = id + 1;
-                }
-                Err(_) => (),
-            };
-        }
-
-        let mut file = OpenOptions::new()
-            .write(true)
-            .append(true)
-            .open(path)
-            .unwrap();
-        let mut content: String = String::new();
-        content.push_str(&id.to_string());
-        content.push_str(". ");
-        content.push_str(matches.value_of("text").unwrap());
-        content.push_str("\n");
-        file.write(content.as_bytes()).expect("failed");
-
-        println!("added todo with id: {}", id);
+        add(path, matches.value_of("text").unwrap());
     }
 
     // list cmd
@@ -147,3 +124,26 @@ fn main() {
 // fn get_time(x: Tm) -> String {
 //     format!("{}:{}:{}", x.tm_hour, x.tm_min, x.tm_sec)
 // }
+
+fn add(path: &str, text: &str) {
+    let f = BufReader::new(File::open(path).unwrap());
+    let mut id = 0;
+    for line in f.lines() {
+        match line {
+            Ok(_) => {
+                id = id + 1;
+            }
+            Err(_) => (),
+        };
+    }
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(path)
+        .unwrap();
+    let content = format!("{}. {}\n", id, text);
+    file.write(content.as_bytes()).expect("failed");
+
+    println!("added todo with id: {}", id);
+}
