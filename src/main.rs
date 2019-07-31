@@ -45,73 +45,20 @@ fn main() {
 
     // list cmd
     if let Some(_) = matches.subcommand_matches("list") {
-        let f = File::open(path).expect("Unable to open file");
-        let f = BufReader::new(f);
-        for line in f.lines() {
-            let line = line.expect("Unable to read line");
-            println!("{}", line);
-        }
+        list(path);
     }
 
     // edit cmd
     if let Some(matches) = matches.subcommand_matches("edit") {
         if matches.is_present("id") {
-            let id = matches.value_of("id").unwrap();
-            let mut new_message = String::new();
-            let mut new_file = String::new();
-            let f = BufReader::new(File::open(path).unwrap());
-            for line in f.lines() {
-                match line {
-                    Ok(line) => {
-                        let split = line.split(".");
-                        let vec = split.collect::<Vec<&str>>();
-                        if vec[0].trim() == id {
-                            println!("please enter new message for id: {}", id);
-                            io::stdin().read_line(&mut new_message).expect("failed");
-                            new_file.push_str(id);
-                            new_file.push_str(". ");
-                            new_file.push_str(&new_message.trim());
-                            new_file.push_str("\n");
-                        } else {
-                            new_file.push_str(&line);
-                            new_file.push_str("\n");
-                        }
-                    }
-
-                    Err(e) => panic!("Error reading file: {}", e),
-                }
-            }
-            let mut ofile = File::create(path).expect("unable to create file");
-            ofile
-                .write_all(new_file.as_bytes())
-                .expect("unable to write");
+            edit(path, matches.value_of("id").unwrap());
         }
     }
 
     // remove cmd
     if let Some(matches) = matches.subcommand_matches("remove") {
         if matches.is_present("id") {
-            let id = matches.value_of("id").unwrap();
-            let f = BufReader::new(File::open(path).unwrap());
-            let mut c = String::new();
-            for line in f.lines() {
-                match line {
-                    Ok(line) => {
-                        let split = line.split(".");
-                        let vec = split.collect::<Vec<&str>>();
-                        if !(vec[0].trim() == id) {
-                            c.push_str(&line);
-                            c.push_str(" \n");
-                        }
-                    }
-
-                    Err(e) => panic!("Error reading file: {}", e),
-                }
-            }
-            let mut ofile = File::create(path).expect("unable to create file");
-            ofile.write_all(c.as_bytes()).expect("unable to write");
-
-            println!("removed todo with id: {}", id);
+            remove(path, matches.value_of("id").unwrap());
         }
     }
 
@@ -146,4 +93,67 @@ fn add(path: &str, text: &str) {
     file.write(content.as_bytes()).expect("failed");
 
     println!("added todo with id: {}", id);
+}
+
+fn list(path: &str) {
+    let f = File::open(path).expect("Unable to open file");
+    let f = BufReader::new(f);
+    for line in f.lines() {
+        let line = line.expect("Unable to read line");
+        println!("{}", line);
+    }
+}
+
+fn edit(path: &str, id: &str) {
+    let mut new_message = String::new();
+    let mut new_file = String::new();
+    let f = BufReader::new(File::open(path).unwrap());
+    for line in f.lines() {
+        match line {
+            Ok(line) => {
+                let split = line.split(".");
+                let vec = split.collect::<Vec<&str>>();
+                if vec[0].trim() == id {
+                    println!("please enter new message for id: {}", id);
+                    io::stdin().read_line(&mut new_message).expect("failed");
+                    new_file.push_str(id);
+                    new_file.push_str(". ");
+                    new_file.push_str(&new_message.trim());
+                    new_file.push_str("\n");
+                } else {
+                    new_file.push_str(&line);
+                    new_file.push_str("\n");
+                }
+            }
+
+            Err(e) => panic!("Error reading file: {}", e),
+        }
+    }
+    let mut ofile = File::create(path).expect("unable to create file");
+    ofile
+        .write_all(new_file.as_bytes())
+        .expect("unable to write");
+}
+
+fn remove(path: &str, id: &str) {
+    let f = BufReader::new(File::open(path).unwrap());
+    let mut c = String::new();
+    for line in f.lines() {
+        match line {
+            Ok(line) => {
+                let split = line.split(".");
+                let vec = split.collect::<Vec<&str>>();
+                if !(vec[0].trim() == id) {
+                    c.push_str(&line);
+                    c.push_str(" \n");
+                }
+            }
+
+            Err(e) => panic!("Error reading file: {}", e),
+        }
+    }
+    let mut ofile = File::create(path).expect("unable to create file");
+    ofile.write_all(c.as_bytes()).expect("unable to write");
+
+    println!("removed todo with id: {}", id);
 }
