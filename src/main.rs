@@ -164,31 +164,30 @@ fn main() {
                 file.write(content.as_bytes()).expect("failed");
                 println!("added todo with id: {}", x);
             } else {
+                // getting index
                 let mut buf = String::new();
                 tmp_index_file.read_to_string(&mut buf).unwrap();
                 println!("{}", buf);
+                let z = matches.value_of("text").unwrap();
+                println!("{}", z);
 
-                // write on a NamedTempFile
-                let x =
-                    fs::read_to_string("index.txt").expect("Something went wrong reading the file");
+                // getting todo message
+                // write on a NamedTempFile add
 
-                let my_int = x.parse::<i32>().unwrap() + 1;
-                let mut ofile = File::create("index.txt").expect("unable to create file");
-                let s = my_int.to_string();
-                ofile.write_all(s.as_bytes()).expect("unable to write");
-                let mut file = OpenOptions::new()
-                    .write(true)
-                    .append(true)
-                    .open("todo.txt")
-                    .unwrap();
-
-                let mut content: String = String::new();
-                content.push_str(&x);
+                let mut content = String::new();
+                content.push_str(&buf);
                 content.push_str(". ");
-                content.push_str(matches.value_of("text").unwrap());
+                content.push_str(z);
                 content.push_str("\n");
-                file.write(content.as_bytes()).expect("failed");
-                println!("added todo with id: {}", x);
+                tmp_file.seek(SeekFrom::Start(0)).unwrap();
+
+                write!(tmp_file, "{}", content).unwrap();
+                tmp_file.seek(SeekFrom::Start(0)).unwrap();
+                let mut buf3 = String::new();
+                tmp_file.read_to_string(&mut buf3).unwrap();
+                assert_eq!("0. bufu\n", buf3);
+
+                println!("added todo with id: {}", buf);
             }
         } else {
             println!("Printing normally...");
