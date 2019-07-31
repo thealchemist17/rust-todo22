@@ -1,4 +1,3 @@
-mod todo;
 use clap::{App, Arg, SubCommand};
 use std::fs;
 use std::fs::File;
@@ -10,7 +9,7 @@ use std::path::Path;
 use tempfile::Builder;
 use tempfile::NamedTempFile;
 use time::Tm;
-use todo::*;
+
 fn main() {
     let matches = App::new("rust-todo22")
         .version("1.0")
@@ -86,7 +85,6 @@ fn main() {
             let id = matches.value_of("id").unwrap();
             let mut new_message = String::new();
             let mut new_file = String::new();
-            println!("ciao");
             let f = BufReader::new(File::open(path).unwrap());
             for line in f.lines() {
                 match line {
