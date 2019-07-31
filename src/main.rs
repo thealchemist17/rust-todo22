@@ -12,57 +12,6 @@ use tempfile::NamedTempFile;
 use time::Tm;
 use todo::*;
 fn main() {
-    let mut config = false;
-    let mut c = String::new();
-    // [test]
-    // let mut tmpfile = NamedTempFile::new().unwrap();
-    // write!(tmpfile, "abcde").unwrap();
-    // tmpfile.seek(SeekFrom::Start(0)).unwrap();
-    // let mut buf = String::new();
-    // tmpfile.read_to_string(&mut buf).unwrap();
-    // assert_eq!("abcde", buf);
-
-    // EXAMPLE
-    // Create a named temporary file and open an independent file handle:
-    // let text = "Brian was here. Briefly.";
-    // // Create a file inside of `std::env::temp_dir()`.
-    // let mut file1 = NamedTempFile::new().unwrap();
-
-    // // Re-open it.
-    // let mut file2 = file1.reopen().unwrap();
-
-    // // Write some test data to the first handle.
-    // file1.write_all(text.as_bytes()).unwrap();
-
-    // // Read the test data using the second handle.
-    // let mut buf = String::new();
-    // file2.read_to_string(&mut buf).unwrap();
-    // assert_eq!(buf, text);
-
-    // todos will be saved here
-    if !Path::new("todo.txt").exists() {
-        File::create("todo.txt").unwrap();
-    }
-
-    // index will be saved here
-    if !Path::new("index.txt").exists() {
-        let mut ofile = File::create("index.txt").expect("unable to create file");
-        let s = "0".to_string();
-        ofile.write_all(s.as_bytes()).expect("unable to write");
-    }
-
-    // checking if in the index.txt files there is a i32 that represent the current index
-    let current_index =
-        fs::read_to_string("index.txt").expect("Something went wrong reading the file");
-    match current_index.parse::<i32>() {
-        Ok(_) => (),
-        Err(_) => {
-            let mut ofile = File::create("index.txt").expect("unable to create file");
-            let s = "0".to_string();
-            ofile.write_all(s.as_bytes()).expect("unable to write");
-        }
-    };
-
     let matches = App::new("rust-todo22")
         .version("1.0")
         .author("Luca Mancinelli <lucamancinelli17@gmail.com>")
@@ -80,111 +29,54 @@ fn main() {
             Arg::with_name("config")
                 .short("f")
                 .long("config")
+                .default_value("todo.txt")
                 .value_name("config")
-                .help("sets a custom config file")
-                .requires("path")
-                .index(1),
+                .help("sets a custom config file"),
         )
-        .arg(
-            Arg::with_name("path")
-                .help("sets the config file to use")
-                .takes_value(true)
-                .index(2),
-        )
-        .arg(Arg::with_name("-c"))
         .get_matches();
-
+    let mut path = "todo.txt";
     if matches.is_present("config") {
-        config = true;
-        if matches.value_of("config").unwrap() == "config"
-            || matches.value_of("config").unwrap() == "f"
-        {
-            if let Some(path) = matches.value_of("path") {
-                c.push_str(path);
-                c.push_str(".txt");
-                if !Path::new(&c).exists() {
-                    File::create(&c).unwrap();
-                }
+        if let Some(val) = matches.value_of("config") {
+            path = val;
+            if !Path::new(val).exists() {
+                File::create(val).unwrap();
             }
-        } else {
-            // config is present but its value is wrong
-            // user input like 'cargo run bufu'
-            // 'bufu' not valid as first arg
-            panic!("{} is not a command", matches.value_of("config").unwrap());
         }
-    } else {
-        // config arg is not present so standard configuration
     }
-
     // add cmd
     if let Some(matches) = matches.subcommand_matches("add") {
-        if !config {
-            // cargo run add todo
-            let x = fs::read_to_string("index.txt").expect("Something went wrong reading the file");
-            let my_int = x.parse::<i32>().unwrap() + 1;
-            let mut ofile = File::create("index.txt").expect("unable to create file");
-            let s = my_int.to_string();
-            ofile.write_all(s.as_bytes()).expect("unable to write");
-            let mut file = OpenOptions::new()
-                .write(true)
-                .append(true)
-                .open("todo.txt")
-                .unwrap();
-
-            let mut content: String = String::new();
-            content.push_str(&x);
-            content.push_str(". ");
-            content.push_str(matches.value_of("text").unwrap());
-            content.push_str("\n");
-            file.write(content.as_bytes()).expect("failed");
-            println!("added todo with id: {}", x);
-        } else {
-            // cargo run config <path> add <todo>
-            // reading index
-            let x = fs::read_to_string("index.txt").expect("Something went wrong reading the file");
-
-            let my_int = x.parse::<i32>().unwrap() + 1;
-            let mut ofile = File::create("index.txt").expect("unable to create file");
-            let s = my_int.to_string();
-            ofile.write_all(s.as_bytes()).expect("unable to write");
-            // reading todo
-            let z = matches.value_of("text").unwrap();
-            // writing on specified file
-            let mut content = String::new();
-            content.push_str(&x);
-            content.push_str(". ");
-            content.push_str(z);
-            content.push_str("\n");
-            let mut file = OpenOptions::new()
-                .write(true)
-                .append(true)
-                .open(&c)
-                .unwrap();
-            file.write(content.as_bytes()).expect("failed");
-            println!("added todo with id: {}", x);
+        let f = BufReader::new(File::open(path).unwrap());
+        let mut id = 0;
+        for line in f.lines() {
+            match line {
+                Ok(line) => {
+                    let split = line.split(".");
+                    id = id + 1;
+                }
+                Err(_) => (),
+            };
         }
+
+        let mut file = OpenOptions::new()
+            .write(true)
+            .append(true)
+            .open(path)
+            .unwrap();
+        let mut content: String = String::new();
+        content.push_str(&id.to_string());
+        content.push_str(". ");
+        content.push_str(matches.value_of("text").unwrap());
+        content.push_str("\n");
+        file.write(content.as_bytes()).expect("failed");
     }
 
     // list cmd
     if let Some(_) = matches.subcommand_matches("list") {
-        if !config {
-            let f = File::open("todo.txt").expect("Unable to open file");
-            let f = BufReader::new(f);
-            for line in f.lines() {
-                let line = line.expect("Unable to read line");
-                println!("{}", line);
-            }
-        } else {
-            // cargo run config <path> list
-            let mut st = String::new();
-            st.push_str(matches.value_of("path").unwrap());
-            st.push_str(".txt");
-            let f = File::open(st).expect("Unable to open file");
-            let f = BufReader::new(f);
-            for line in f.lines() {
-                let line = line.expect("Unable to read line");
-                println!("{}", line);
-            }
+        let f = File::open(path).expect("Unable to open file");
+        let f = BufReader::new(f);
+        for line in f.lines() {
+            let line = line.expect("Unable to read line");
+            println!("{}", line);
         }
     }
 
@@ -194,7 +86,8 @@ fn main() {
             let id = matches.value_of("id").unwrap();
             let mut new_message = String::new();
             let mut new_file = String::new();
-            let f = BufReader::new(File::open("todo.txt").unwrap());
+            println!("ciao");
+            let f = BufReader::new(File::open(path).unwrap());
             for line in f.lines() {
                 match line {
                     Ok(line) => {
@@ -216,12 +109,10 @@ fn main() {
                     Err(e) => panic!("Error reading file: {}", e),
                 }
             }
-            let mut ofile = File::create("todo.txt").expect("unable to create file");
+            let mut ofile = File::create(path).expect("unable to create file");
             ofile
                 .write_all(new_file.as_bytes())
                 .expect("unable to write");
-
-            //println!("{}", matches.value_of("id").unwrap());
         }
     }
 
@@ -229,7 +120,7 @@ fn main() {
     if let Some(matches) = matches.subcommand_matches("remove") {
         if matches.is_present("id") {
             let id = matches.value_of("id").unwrap();
-            let f = BufReader::new(File::open("todo.txt").unwrap());
+            let f = BufReader::new(File::open(path).unwrap());
             let mut c = String::new();
             for line in f.lines() {
                 match line {
@@ -245,19 +136,14 @@ fn main() {
                     Err(e) => panic!("Error reading file: {}", e),
                 }
             }
-            let mut ofile = File::create("todo.txt").expect("unable to create file");
+            let mut ofile = File::create(path).expect("unable to create file");
             ofile.write_all(c.as_bytes()).expect("unable to write");
-            let c = format!("{} {} {}", "item with id", id, "has been deleted");
-            println!("{}", c);
         }
     }
 
     // clear cmd
     if let Some(matches) = matches.subcommand_matches("clear") {
-        File::create("todo.txt").expect("unable to create file");
-        let mut ofile = File::create("index.txt").expect("unable to create file");
-        let s = "0".to_string();
-        ofile.write_all(s.as_bytes()).expect("unable to write");
+        File::create(path).expect("unable to create file");
     }
 
     let time = time::now();
