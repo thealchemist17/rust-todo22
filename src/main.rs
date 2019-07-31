@@ -13,13 +13,12 @@ use time::Tm;
 use todo::*;
 fn main() {
     let mut config = false;
-    let mut tmp_index_file = NamedTempFile::new().unwrap();
-    let mut tmp_file = NamedTempFile::new().unwrap();
+    let mut c = String::new();
     // [test]
     // let mut tmpfile = NamedTempFile::new().unwrap();
     // write!(tmpfile, "abcde").unwrap();
     // tmpfile.seek(SeekFrom::Start(0)).unwrap();
-    // let mut buf = String::new();s
+    // let mut buf = String::new();
     // tmpfile.read_to_string(&mut buf).unwrap();
     // assert_eq!("abcde", buf);
 
@@ -100,34 +99,15 @@ fn main() {
         if matches.value_of("config").unwrap() == "config"
             || matches.value_of("config").unwrap() == "f"
         {
+            println!("ciao");
             if let Some(path) = matches.value_of("path") {
-                // temporary data will be saved here
-                let mut tmp_file = Builder::new()
-                    .prefix(path)
-                    .suffix(".txt")
-                    .rand_bytes(5)
-                    .tempfile()
-                    .unwrap();
-                //write!(tmp_file, "abcde").unwrap();
-                //tmp_file.seek(SeekFrom::Start(0)).unwrap();
-                //let mut buf = String::new();
-                //tmp_file.read_to_string(&mut buf).unwrap();
-                //assert_eq!("abcde", buf);
-
-                // path of the temporary file
-                println!("changing config file to: {}", path);
-                // temporary index will be saved here
-                tmp_index_file = Builder::new()
-                    .prefix("tmp_index")
-                    .suffix(".txt")
-                    .tempfile()
-                    .unwrap();
-
-                // initialize the content of tmp_index_file
-                tmp_index_file.seek(SeekFrom::Start(0)).unwrap();
-
-                write!(tmp_index_file, "0").unwrap();
-                tmp_index_file.seek(SeekFrom::Start(0)).unwrap();
+                c.push_str(path);
+                c.push_str(".txt");
+                println!("{}", c);
+                println!("{}", c);
+                if !Path::new(&c).exists() {
+                    File::create(&c).unwrap();
+                }
             }
         } else {
             // config is present but its value is wrong
@@ -141,56 +121,59 @@ fn main() {
 
     // add cmd
     if let Some(matches) = matches.subcommand_matches("add") {
-        if matches.is_present("text") {
-            if !config {
-                let x =
-                    fs::read_to_string("index.txt").expect("Something went wrong reading the file");
+        if !config {
+            // cargo run add todo
+            let x = fs::read_to_string("index.txt").expect("Something went wrong reading the file");
 
-                let my_int = x.parse::<i32>().unwrap() + 1;
-                let mut ofile = File::create("index.txt").expect("unable to create file");
-                let s = my_int.to_string();
-                ofile.write_all(s.as_bytes()).expect("unable to write");
-                let mut file = OpenOptions::new()
-                    .write(true)
-                    .append(true)
-                    .open("todo.txt")
-                    .unwrap();
+            let my_int = x.parse::<i32>().unwrap() + 1;
+            let mut ofile = File::create("index.txt").expect("unable to create file");
+            let s = my_int.to_string();
+            ofile.write_all(s.as_bytes()).expect("unable to write");
+            let mut file = OpenOptions::new()
+                .write(true)
+                .append(true)
+                .open("todo.txt")
+                .unwrap();
 
-                let mut content: String = String::new();
-                content.push_str(&x);
-                content.push_str(". ");
-                content.push_str(matches.value_of("text").unwrap());
-                content.push_str("\n");
-                file.write(content.as_bytes()).expect("failed");
-                println!("added todo with id: {}", x);
-            } else {
-                // getting index
-                let mut buf = String::new();
-                tmp_index_file.read_to_string(&mut buf).unwrap();
-                println!("{}", buf);
-                let z = matches.value_of("text").unwrap();
-                println!("{}", z);
-
-                // getting todo message
-                // write on a NamedTempFile add
-
-                let mut content = String::new();
-                content.push_str(&buf);
-                content.push_str(". ");
-                content.push_str(z);
-                content.push_str("\n");
-                tmp_file.seek(SeekFrom::Start(0)).unwrap();
-
-                write!(tmp_file, "{}", content).unwrap();
-                tmp_file.seek(SeekFrom::Start(0)).unwrap();
-                let mut buf3 = String::new();
-                tmp_file.read_to_string(&mut buf3).unwrap();
-                assert_eq!("0. bufu\n", buf3);
-
-                println!("added todo with id: {}", buf);
-            }
+            let mut content: String = String::new();
+            content.push_str(&x);
+            content.push_str(". ");
+            content.push_str(matches.value_of("text").unwrap());
+            content.push_str("\n");
+            file.write(content.as_bytes()).expect("failed");
+            println!("added todo with id: {}", x);
         } else {
-            println!("Printing normally...");
+            println!("config");
+            // cargo run config <tmp_file> add <todo>
+            let x = fs::read_to_string("index.txt").expect("Something went wrong reading the file");
+            // reading index from tmp_index_file
+
+            let my_int = x.parse::<i32>().unwrap() + 1;
+            let mut ofile = File::create("index.txt").expect("unable to create file");
+            let s = my_int.to_string();
+            ofile.write_all(s.as_bytes()).expect("unable to write");
+
+            let z = matches.value_of("text").unwrap();
+            println!("config");
+            // getting todo message
+            // write on a NamedTempFile add
+
+            let mut content = String::new();
+            content.push_str(&x);
+            content.push_str(". ");
+            content.push_str(z);
+            content.push_str("\n");
+            println!("config");
+            // write on path
+            println!("{}", c);
+            let mut file = OpenOptions::new()
+                .write(true)
+                .append(true)
+                .open(&c)
+                .unwrap();
+            println!("config");
+            file.write(content.as_bytes()).expect("failed");
+            println!("added todo with id: {}", x);
         }
     }
 
@@ -237,7 +220,7 @@ fn main() {
                 .write_all(new_file.as_bytes())
                 .expect("unable to write");
 
-            println!("{}", matches.value_of("id").unwrap());
+            //println!("{}", matches.value_of("id").unwrap());
         }
     }
 

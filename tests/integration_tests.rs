@@ -32,6 +32,25 @@ fn it_add_todo() {
 }
 
 #[test]
+
+fn it_add_todo_config() {
+    clean();
+    let cmd = Command::cargo_bin("rust-todo22")
+        .unwrap()
+        .arg("config")
+        .arg("todo.txt")
+        .arg("add")
+        .arg("bufu")
+        .unwrap();
+    // Assert stdout
+    cmd.assert()
+        .stdout("changing config file to: todo.txt\nadded todo with id: 0\n");
+    let content = fs::read_to_string("todo.txt").expect("Failed to open file");
+    assert_eq!(content, "0. bufu\n".to_string());
+    clean();
+}
+
+#[test]
 fn it_list() {
     clean();
     let mut file = std::fs::File::create("todo.txt").unwrap();
@@ -54,7 +73,10 @@ fn it_edit() {
         .arg("edit")
         .arg("0")
         .unwrap();
-    let x = "abcde";
+    cmd.assert().stdout("please enter new message for id: 0\n");
+    let content = fs::read_to_string("todo.txt").expect("Failed to open file");
+    println!("{}", content);
+    assert_eq!(content, "0.  \n".to_string());
     clean();
 }
 #[test]
