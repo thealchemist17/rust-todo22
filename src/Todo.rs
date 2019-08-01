@@ -1,53 +1,46 @@
+use serde::{Deserialize, Serialize};
+use std::fmt;
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Todo {
     id: String,
-    state: State,
-    priority: Priority,
-    creation_date: String,
-    last_updated_date: String,
+    text: String,
+    //state: State,
+    // priority: Priority,
+    // creation_date: String,
+    // last_updated_date: String,
 }
+impl fmt::Display for Todo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Customize so only `x` and `y` are denoted.
+        write!(f, "{}. {}", self.id, self.text)
+    }
+}
+// pub enum State {
+//     TODO,
+//     PROGRESS,
+//     DONE,
+// }
 
-pub enum State {
-    TODO,
-    PROGRESS,
-    DONE,
-}
-
-pub enum Priority {
-    LOW,
-    MEDIUM,
-    HIGH,
-}
+// pub enum Priority {
+//     LOW,
+//     MEDIUM,
+//     HIGH,
+//
 
 impl Todo {
-    pub fn new(
-        id: String,
-        state: State,
-        priority: Priority,
-        creation_date: String,
-        last_updated_date: String,
-    ) -> Todo {
-        Todo {
-            id,
-            state,
-            priority,
-            creation_date,
-            last_updated_date,
-        }
+    pub fn new(id: String, text: String) -> Todo {
+        Todo { id, text }
     }
+
     pub fn get_id(&self) -> &str {
         &self.id
     }
 
-    fn set_state(&mut self, s: State) {
-        self.state = s;
+    pub fn set_text(&mut self, text: String) {
+        self.text = text;
     }
-    fn set_priority(&mut self, p: Priority) {
-        self.priority = p;
-    }
-    fn set_creation_date(&mut self, creation_date: String) {
-        self.creation_date = creation_date;
-    }
-    fn set_last_updated_date(&mut self, last_updated_date: String) {
-        self.last_updated_date = last_updated_date;
+
+    pub fn get_text(&self) -> &str {
+        &self.text
     }
 }

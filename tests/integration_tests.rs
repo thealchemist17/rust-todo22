@@ -32,13 +32,15 @@ fn it_add_todo() {
     cmd.assert().stdout(contents.to_string());
     // Check that the todo text is in the file
     let content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
-    assert_eq!(content, "0. bufu\n".to_string());
+    //assert_eq!(content, "0. bufu\n".to_string());
+    assert_eq!(content, "{\"id\":\"0\",\"text\":\"bufu\"}\n");
 }
 
 #[test]
 fn it_list() {
     let mut temp_file = get_temp_file();
-    writeln!(temp_file, "0. bufu").unwrap();
+    //writeln!(temp_file, "0. bufu").unwrap();
+    writeln!(temp_file, "{{\"id\":\"0\",\"text\":\"bufu\"}}\n").unwrap();
     let cmd = Command::cargo_bin("rust-todo22")
         .unwrap()
         .arg("-f")
@@ -51,7 +53,8 @@ fn it_list() {
 #[test]
 fn it_edit() {
     let mut temp_file = get_temp_file();
-    writeln!(temp_file, "0. bufu").unwrap();
+    //writeln!(temp_file, "0. bufu").unwrap();
+    writeln!(temp_file, "{{\"id\":\"0\",\"text\":\"bufu\"}}").unwrap();
     let cmd = Command::cargo_bin("rust-todo22")
         .unwrap()
         .arg("-f")
@@ -63,13 +66,15 @@ fn it_edit() {
         .unwrap();
     cmd.assert().stdout("please enter new message for id: 0\n");
     let content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
-    assert_eq!(content, "0. test\n".to_string());
+    //assert_eq!(content, "0. test\n".to_string());
+    assert_eq!(content, "{\"id\":\"0\",\"text\":\"test\"}\n");
 }
 
 #[test]
 fn it_remove() {
     let mut temp_file = get_temp_file();
-    writeln!(temp_file, "0. bufu").unwrap();
+    //writeln!(temp_file, "0. bufu").unwrap();
+    writeln!(temp_file, "{{\"id\":\"0\",\"text\":\"bufu\"}}").unwrap();
     let cmd = Command::cargo_bin("rust-todo22")
         .unwrap()
         .arg("-f")

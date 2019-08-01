@@ -1,3 +1,4 @@
+mod todo;
 use clap::{App, Arg, SubCommand};
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -5,7 +6,7 @@ use std::io;
 use std::io::Write;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
-
+use todo::Todo;
 fn main() {
     let matches = App::new("rust-todo22")
         .version("1.0")
@@ -24,12 +25,12 @@ fn main() {
             Arg::with_name("config")
                 .short("f")
                 .long("config")
-                .default_value("todo.txt")
+                .default_value("todo.json")
                 .value_name("config")
                 .help("sets a custom config file"),
         )
         .get_matches();
-    let mut path = "todo.txt";
+    let mut path = "todo.json";
     if matches.is_present("config") {
         if let Some(val) = matches.value_of("config") {
             path = val;
@@ -38,27 +39,46 @@ fn main() {
             }
         }
     }
+    let mut todos: Vec<Todo> = Vec::new();
+
+    let f = BufReader::new(File::open(path).unwrap());
+    for line in f.lines() {
+        match line {
+            Ok(line) => {
+                if !line.trim().is_empty() {
+                    let data: Todo = serde_json::from_str(&line).unwrap();
+                    todos.push(Todo::new(
+                        data.get_id().to_string(),
+                        data.get_text().to_string(),
+                    ));
+                }
+            }
+
+            Err(e) => panic!("Error reading file: {}", e),
+        }
+    }
+
     // add cmd
     if let Some(matches) = matches.subcommand_matches("add") {
-        add(path, matches.value_of("text").unwrap());
+        add(&mut todos, path, matches.value_of("text").unwrap());
     }
 
     // list cmd
     if let Some(_) = matches.subcommand_matches("list") {
-        list(path);
+        list(&mut todos);
     }
 
     // edit cmd
     if let Some(matches) = matches.subcommand_matches("edit") {
         if matches.is_present("id") {
-            edit(path, matches.value_of("id").unwrap());
+            edit(&mut todos, path, matches.value_of("id").unwrap());
         }
     }
 
     // remove cmd
     if let Some(matches) = matches.subcommand_matches("remove") {
         if matches.is_present("id") {
-            remove(path, matches.value_of("id").unwrap());
+            remove(&mut todos, path, matches.value_of("id").unwrap());
         }
     }
 
@@ -72,88 +92,56 @@ fn main() {
 //     format!("{}:{}:{}", x.tm_hour, x.tm_min, x.tm_sec)
 // }
 
-fn add(path: &str, text: &str) {
-    let f = BufReader::new(File::open(path).unwrap());
-    let mut id = 0;
-    for line in f.lines() {
-        match line {
-            Ok(_) => {
-                id = id + 1;
-            }
-            Err(_) => (),
-        };
+fn add(todos: &mut Vec<Todo>, path: &str, text: &str) {
+    let mut last_index: i32 = 0;
+    if todos.len() >= 1 {
+        last_index = todos[todos.len() - 1].get_id().parse::<i32>().unwrap() + 1;
     }
+    let x = Todo::new(last_index.to_string(), text.to_string());
+    let todo = serde_json::to_string(&x).unwrap();
+    todos.push(x);
 
     let mut file = OpenOptions::new()
         .write(true)
         .append(true)
         .open(path)
         .unwrap();
-    let content = format!("{}. {}\n", id, text);
-    file.write(content.as_bytes()).expect("failed");
-
-    println!("added todo with id: {}", id);
+    let c = format!("{}\n", todo);
+    file.write(c.as_bytes()).expect("failed");
+    println!("added todo with id: {}", last_index);
 }
 
-fn list(path: &str) {
-    let f = File::open(path).expect("Unable to open file");
-    let f = BufReader::new(f);
-    for line in f.lines() {
-        let line = line.expect("Unable to read line");
-        println!("{}", line);
+fn list(todos: &mut Vec<Todo>) {
+    for x in todos {
+        println!("{}", x);
     }
 }
 
-fn edit(path: &str, id: &str) {
+fn edit(todos: &mut Vec<Todo>, path: &str, id: &str) {
     let mut new_message = String::new();
-    let mut new_file = String::new();
-    let f = BufReader::new(File::open(path).unwrap());
-    for line in f.lines() {
-        match line {
-            Ok(line) => {
-                let split = line.split(".");
-                let vec = split.collect::<Vec<&str>>();
-                if vec[0].trim() == id {
-                    println!("please enter new message for id: {}", id);
-                    io::stdin().read_line(&mut new_message).expect("failed");
-                    new_file.push_str(id);
-                    new_file.push_str(". ");
-                    new_file.push_str(&new_message.trim());
-                    new_file.push_str("\n");
-                } else {
-                    new_file.push_str(&line);
-                    new_file.push_str("\n");
-                }
-            }
+    println!("please enter new message for id: {}", id);
+    io::stdin().read_line(&mut new_message).expect("failed");
+    let index: usize = id.parse::<usize>().unwrap();
+    todos[index].set_text(new_message.trim().to_string());
+    let mut ofile = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(path)
+        .unwrap();
 
-            Err(e) => panic!("Error reading file: {}", e),
-        }
+    for x in todos {
+        let c = format!("{}\n", serde_json::to_string(&x).unwrap());
+        ofile.write(c.as_bytes()).expect("unable to write");
     }
-    let mut ofile = File::create(path).expect("unable to create file");
-    ofile
-        .write_all(new_file.as_bytes())
-        .expect("unable to write");
 }
 
-fn remove(path: &str, id: &str) {
-    let f = BufReader::new(File::open(path).unwrap());
-    let mut c = String::new();
-    for line in f.lines() {
-        match line {
-            Ok(line) => {
-                let split = line.split(".");
-                let vec = split.collect::<Vec<&str>>();
-                if !(vec[0].trim() == id) {
-                    c.push_str(&line);
-                    c.push_str(" \n");
-                }
-            }
-
-            Err(e) => panic!("Error reading file: {}", e),
-        }
-    }
+fn remove(todos: &mut Vec<Todo>, path: &str, id: &str) {
+    todos.retain(|bufu| bufu.get_id() != id);
     let mut ofile = File::create(path).expect("unable to create file");
-    ofile.write_all(c.as_bytes()).expect("unable to write");
 
-    println!("removed todo with id: {}", id);
+    for x in todos {
+        let c = format!("{}\n", serde_json::to_string(&x).unwrap());
+        ofile.write(c.as_bytes()).expect("unable to write");
+    }
+    //ofile.write_all(c.as_bytes()).expect("unable to write");
 }

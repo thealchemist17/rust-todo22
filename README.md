@@ -6,10 +6,11 @@
 - Add tests for edit, remove and clear
 
 *Step 2*
-- Define a struct that represents a Todo entry
-- Add handling of Priority and State
+- Define a struct that represents a Todo entry (chrono)
+
 - Use serde to serialize and deserialize 
-- Optionally use a config file to specify the path/name of the todo file
+- Add handling of Priority and State
+- Optionally use a config file to specify the path/name of the todo file 
 
 *Step 3*
 - Adapt the list subcommand to allow sorting and filtering
