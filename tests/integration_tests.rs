@@ -3,7 +3,6 @@ use std::fs;
 use std::io::Write;
 use std::process::Command;
 use tempfile::NamedTempFile;
-
 fn get_temp_file() -> NamedTempFile {
     NamedTempFile::new().expect("Unable o create temporary file")
 }

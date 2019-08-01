@@ -1,5 +1,6 @@
 mod todo;
 use clap::{App, Arg, SubCommand};
+use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
 use std::io;
@@ -65,7 +66,7 @@ fn main() {
 
     // list cmd
     if let Some(_) = matches.subcommand_matches("list") {
-        list(&mut todos);
+        list();
     }
 
     // edit cmd
@@ -111,10 +112,12 @@ fn add(todos: &mut Vec<Todo>, path: &str, text: &str) {
     println!("added todo with id: {}", last_index);
 }
 
-fn list(todos: &mut Vec<Todo>) {
-    for x in todos {
-        println!("{}", x);
-    }
+fn list() {
+    //for x in todos {
+    //    println!("{}", x);
+    //}
+    let contents = fs::read_to_string("todo.json").expect("Something went wrong reading the file");
+    println!("{}", contents);
 }
 
 fn edit(todos: &mut Vec<Todo>, path: &str, id: &str) {
