@@ -7,7 +7,7 @@ pub struct Data {
     next_id: u32,
     todos: Vec<Todo>,
 }
-impl Data{
+impl Data {
     pub fn new() -> Data {
         Data {
             next_id: 0,
@@ -16,28 +16,33 @@ impl Data{
     }
     pub fn add(&mut self, todo: Todo) {
         self.todos.push(todo);
-        self.next_id +=1;
-    } 
+        self.next_id += 1;
+    }
 
-    pub fn add_from_text(&mut self, text: &str){
-        
+    pub fn add_from_text(&mut self, text: &str) {
         self.add(Todo::new(self.next_id, text.to_string()));
     }
 
-    pub fn edit(&mut self, id: u32, text: &str){
-        for todo in self.todos {
+    pub fn edit(&mut self, id: u32, text: &str) {
+        for todo in self.todos.iter_mut() {
             if id == todo.get_id() {
                 todo.set_text(text.to_string());
             }
         }
-        
     }
 
-    pub fn remove(&mut self, id: u32){
+    pub fn remove(&mut self, id: u32) {
         self.todos.retain(|todo| todo.get_id() != id);
     }
 }
-
+impl fmt::Display for Data {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for todo in self.todos.iter() {
+            write!(f, "{}\n", todo).unwrap();
+        }
+        Ok(())
+    }
+}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Todo {
     id: u32,
@@ -102,14 +107,14 @@ pub enum Priority {
 
 impl Todo {
     pub fn new(id: u32, text: String) -> Todo {
-        let dt = Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let dt = Utc::now().format("%Y-%m-%d %H:%M:%S");
         Todo {
             id,
             text,
             state: State::TODO,
             priority: Priority::MEDIUM,
-            creation_date: dt,
-            last_updated_date: dt,
+            creation_date: dt.to_string(),
+            last_updated_date: dt.to_string(),
         }
     }
 

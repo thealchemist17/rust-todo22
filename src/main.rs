@@ -1,13 +1,10 @@
 mod todo;
-use clap::{App, Arg, SubCommand,value_t};
+use clap::{value_t, App, Arg, SubCommand};
 use std::fs;
 use std::fs::File;
-use std::fs::OpenOptions;
-use std::io;
-use std::io::Write;
-use std::io::{BufRead, BufReader};
+use std::io::BufReader;
 use std::path::Path;
-use todo::{Data, Todo};
+use todo::Data;
 fn main() {
     let matches = App::new("rust-todo22")
         .version("1.0")
@@ -19,7 +16,11 @@ fn main() {
                 .arg(Arg::with_name("text").required(true)),
         )
         .subcommand(SubCommand::with_name("list"))
-        .subcommand(SubCommand::with_name("edit").arg(Arg::with_name("id").required(true)))
+        .subcommand(
+            SubCommand::with_name("edit")
+                .arg(Arg::with_name("id").required(true))
+                .arg(Arg::with_name("text").required(true)),
+        )
         .subcommand(SubCommand::with_name("remove").arg(Arg::with_name("id").required(true)))
         .subcommand(SubCommand::with_name("clear"))
         .arg(
@@ -37,8 +38,7 @@ fn main() {
     let mut data: Data = if !Path::new(path).exists() {
         File::create(path).unwrap();
         Data::new()
-
-    }else  {
+    } else {
         let f = BufReader::new(File::open(path).unwrap());
         serde_json::from_reader(f).unwrap()
     };
@@ -50,13 +50,16 @@ fn main() {
 
     // list cmd
     if let Some(_) = matches.subcommand_matches("list") {
-        list();
+        println!("{}", data);
     }
 
     // edit cmd
     if let Some(matches) = matches.subcommand_matches("edit") {
         if matches.is_present("id") {
-            data.edit(value_t!(matches, "id", u32).unwrap(), matches.value_of("text").unwrap());
+            data.edit(
+                value_t!(matches, "id", u32).unwrap(),
+                matches.value_of("text").unwrap(),
+            );
         }
     }
 
@@ -64,7 +67,6 @@ fn main() {
     if let Some(matches) = matches.subcommand_matches("remove") {
         if matches.is_present("id") {
             data.remove(value_t!(matches, "id", u32).unwrap());
-
         }
     }
 
@@ -73,13 +75,5 @@ fn main() {
         File::create(path).expect("unable to create file");
     }
     let file = File::create(path).unwrap();
-    serde_json::to_writer(file, &data);
-}
-
-fn list() {
-    // for x in todos {
-    //     println!("{}", x);
-    // }
-    let contents = fs::read_to_string("todo.json").expect("Something went wrong reading the file");
-    print!("{}", contents);
+    serde_json::to_writer(file, &data).unwrap();
 }
