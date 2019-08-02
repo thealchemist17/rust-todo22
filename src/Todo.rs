@@ -46,6 +46,7 @@ impl Data {
             }
         }
     }
+
     pub fn set_state(&mut self, id: u32, state: State) {
         for x in self.todos.iter_mut() {
             if x.id == id {
@@ -56,6 +57,9 @@ impl Data {
                 };
             }
         }
+    }
+    pub fn get_last_id(&self) -> u32 {
+        self.next_id - 1
     }
 }
 impl fmt::Display for Data {
@@ -79,13 +83,8 @@ impl fmt::Display for Todo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "{}. {} {} {} {} {}",
-            self.id,
-            self.text,
-            self.state,
-            self.priority,
-            self.creation_date,
-            self.last_updated_date
+            "{}. {} {} {}",
+            self.id, self.text, self.state, self.priority,
         )
     }
 }

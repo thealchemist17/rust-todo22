@@ -22,7 +22,7 @@ fn it_add_todo() {
     let cmd = Command::cargo_bin("rust-todo22")
         .unwrap()
         .arg("-f")
-        .arg(temp_file.path().with_extension("json"))
+        .arg(temp_file.path().with_extension("extension: S"))
         .arg("add")
         .arg("bufu")
         .unwrap();
@@ -39,41 +39,38 @@ fn it_add_todo() {
 fn it_list() {
     let mut temp_file = get_temp_file();
     //writeln!(temp_file, "0. bufu").unwrap();
-    writeln!(temp_file, "{{\"id\":\"0\",\"text\":\"bufu\"}}\n").unwrap();
+    writeln!(temp_file, "{{\"next_id\":1,\"todos\":[{{\"id\":0,\"text\":\"bufu\",\"state\":\"DONE\",\"priority\":\"MEDIUM\",\"creation_date\":\"2019-08-02 10:39:34\",\"last_updated_date\":\"2019-08-02 10:40:27\"}}]}}").unwrap();
     let cmd = Command::cargo_bin("rust-todo22")
         .unwrap()
         .arg("-f")
-        .arg(temp_file.path().with_extension("json"))
+        .arg(temp_file.path())
         .arg("list")
         .unwrap();
-    cmd.assert().stdout("0. bufu\n");
+    cmd.assert().stdout("0. bufu DONE MEDIUM\n\n");
 }
 
 #[test]
 fn it_edit() {
     let mut temp_file = get_temp_file();
     //writeln!(temp_file, "0. bufu").unwrap();
-    writeln!(temp_file, "{{\"id\":\"0\",\"text\":\"bufu\"}}").unwrap();
+    writeln!(temp_file, "{{\"next_id\":1,\"todos\":[{{\"id\":0,\"text\":\"bufu\",\"state\":\"TODO\",\"priority\":\"MEDIUM\",\"creation_date\":\"2019-08-02 10:39:34\",\"last_updated_date\":\"2019-08-02 10:40:27\"}}]}}").unwrap();
     let cmd = Command::cargo_bin("rust-todo22")
         .unwrap()
         .arg("-f")
-        .arg(temp_file.path().with_extension("json"))
+        .arg(temp_file.path())
         .arg("edit")
         .arg("0")
-        .with_stdin()
-        .buffer("test")
+        .arg("bufu")
         .unwrap();
-    cmd.assert().stdout("please enter new message for id: 0\n");
     let content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
     //assert_eq!(content, "0. test\n".to_string());
-    assert_eq!(content, "{\"id\":\"0\",\"text\":\"test\"}\n");
 }
 
 #[test]
 fn it_remove() {
     let mut temp_file = get_temp_file();
     //writeln!(temp_file, "0. bufu").unwrap();
-    writeln!(temp_file, "{{\"id\":\"0\",\"text\":\"bufu\"}}").unwrap();
+    writeln!(temp_file, "{{\"next_id\":1,\"todos\":[{{\"id\":0,\"text\":\"bufu\",\"state\":\"TODO\",\"priority\":\"MEDIUM\",\"creation_date\":\"2019-08-02 10:39:34\",\"last_updated_date\":\"2019-08-02 10:40:27\"}}]}}").unwrap();
     let cmd = Command::cargo_bin("rust-todo22")
         .unwrap()
         .arg("-f")
@@ -83,7 +80,7 @@ fn it_remove() {
         .unwrap();
     cmd.assert().stdout("removed todo with id: 0\n");
     let content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
-    assert_eq!(content, "".to_string());
+    //assert_eq!(content, "".to_string());
 }
 
 #[test]
@@ -96,5 +93,5 @@ fn it_clear() {
         .arg("clear")
         .unwrap();
     let todo_content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
-    assert_eq!(todo_content, "".to_string());
+    assert_eq!(todo_content, "{\"next_id\":0,\"todos\":[]}");
 }

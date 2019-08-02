@@ -1,7 +1,9 @@
 mod todo;
 use clap::{value_t, App, Arg, SubCommand};
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::BufReader;
+use std::io::Write;
 use std::path::Path;
 use todo::Data;
 fn main() {
@@ -49,12 +51,26 @@ fn main() {
         Data::new()
     } else {
         let f = BufReader::new(File::open(path).unwrap());
-        serde_json::from_reader(f).unwrap()
+        match serde_json::from_reader(f) {
+            Ok(json) => json,
+            Err(_) => {
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .append(true)
+                    .open(path)
+                    .unwrap();
+
+                let init = String::from("{{\"next_id\":0,\"todos\":[]}}");
+                file.write_all(init.as_bytes()).expect("failed");
+                Data::new()
+            }
+        }
     };
 
     // add cmd
     if let Some(matches) = matches.subcommand_matches("add") {
         data.add_from_text(matches.value_of("text").unwrap());
+        println!("added todo with id: {}", data.get_last_id());
     }
 
     // list cmd
@@ -76,6 +92,10 @@ fn main() {
     if let Some(matches) = matches.subcommand_matches("remove") {
         if matches.is_present("id") {
             data.remove(value_t!(matches, "id", u32).unwrap());
+            println!(
+                "removed todo with id: {}",
+                value_t!(matches, "id", u32).unwrap()
+            );
         }
     }
 
