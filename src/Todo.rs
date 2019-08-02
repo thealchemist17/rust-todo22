@@ -3,8 +3,44 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Data {
+    next_id: u32,
+    todos: Vec<Todo>,
+}
+impl Data{
+    pub fn new() -> Data {
+        Data {
+            next_id: 0,
+            todos: vec![],
+        }
+    }
+    pub fn add(&mut self, todo: Todo) {
+        self.todos.push(todo);
+        self.next_id +=1;
+    } 
+
+    pub fn add_from_text(&mut self, text: &str){
+        
+        self.add(Todo::new(self.next_id, text.to_string()));
+    }
+
+    pub fn edit(&mut self, id: u32, text: &str){
+        for todo in self.todos {
+            if id == todo.get_id() {
+                todo.set_text(text.to_string());
+            }
+        }
+        
+    }
+
+    pub fn remove(&mut self, id: u32){
+        self.todos.retain(|todo| todo.get_id() != id);
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Todo {
-    id: String,
+    id: u32,
     text: String,
     state: State,
     priority: Priority,
@@ -65,22 +101,20 @@ pub enum Priority {
 }
 
 impl Todo {
-    pub fn new(id: String, text: String) -> Todo {
-        let dt = Utc
-            .ymd(Utc::now().year(), Utc::now().month(), Utc::now().day())
-            .and_hms(Utc::now().hour(), Utc::now().minute(), Utc::now().second());
+    pub fn new(id: u32, text: String) -> Todo {
+        let dt = Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
         Todo {
             id,
             text,
             state: State::TODO,
             priority: Priority::MEDIUM,
-            creation_date: dt.to_string(),
-            last_updated_date: dt.to_string(),
+            creation_date: dt,
+            last_updated_date: dt,
         }
     }
 
-    pub fn get_id(&self) -> &str {
-        &self.id
+    pub fn get_id(&self) -> u32 {
+        self.id
     }
 
     pub fn set_text(&mut self, text: String) {

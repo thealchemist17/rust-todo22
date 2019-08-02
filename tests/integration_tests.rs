@@ -57,7 +57,7 @@ fn it_edit() {
     let cmd = Command::cargo_bin("rust-todo22")
         .unwrap()
         .arg("-f")
-        .arg(temp_file.path())
+        .arg(temp_file.path().with_extension("json"))
         .arg("edit")
         .arg("0")
         .with_stdin()
