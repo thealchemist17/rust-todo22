@@ -1,5 +1,5 @@
-use serde_json::Value;
 use assert_cmd::prelude::*;
+use serde_json::Value;
 use std::fs;
 use std::io::Write;
 use std::process::Command;
@@ -67,7 +67,13 @@ fn it_edit() {
         .arg("bufu")
         .unwrap();
     let content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
-    //assert_eq!(content, "0. test\n".to_string());
+    let data: Value = serde_json::from_str(&content).unwrap();
+    assert_eq!(data["todos"][0]["text"], "bufu");
+    assert_eq!(data["todos"][0]["id"], 0);
+    assert_ne!(
+        data["todos"][0]["last_updated_date"].to_string(),
+        String::from("2019-08-02 10:40:27")
+    );
 }
 
 #[test]
@@ -84,7 +90,8 @@ fn it_remove() {
         .unwrap();
     cmd.assert().stdout("removed todo with id: 0\n");
     let content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
-    //assert_eq!(content, "".to_string());
+    let data: Value = serde_json::from_str(&content).unwrap();
+    assert_eq!(data["next_id"], 1);
 }
 
 #[test]
