@@ -10,6 +10,13 @@
 
 - Use serde to serialize and deserialize 
 - Add handling of Priority and State
+- Tests
+
+
+
+
+
+
 - Optionally use a config file to specify the path/name of the todo file 
 
 *Step 3*

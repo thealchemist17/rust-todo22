@@ -1,6 +1,5 @@
 mod todo;
 use clap::{value_t, App, Arg, SubCommand};
-use std::fs;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -23,6 +22,16 @@ fn main() {
         )
         .subcommand(SubCommand::with_name("remove").arg(Arg::with_name("id").required(true)))
         .subcommand(SubCommand::with_name("clear"))
+        .subcommand(
+            SubCommand::with_name("set_p")
+                .arg(Arg::with_name("id").required(true))
+                .arg(Arg::with_name("priority").required(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("set_s")
+                .arg(Arg::with_name("id").required(true))
+                .arg(Arg::with_name("state").required(true)),
+        )
         .arg(
             Arg::with_name("config")
                 .short("f")
@@ -72,8 +81,35 @@ fn main() {
 
     // clear cmd
     if let Some(_) = matches.subcommand_matches("clear") {
+        data = Data::new();
         File::create(path).expect("unable to create file");
     }
+    if let Some(matches) = matches.subcommand_matches("set_p") {
+        if matches.is_present("id") && matches.is_present("priority") {
+            let mut value = todo::Priority::MEDIUM;
+            match matches.value_of("priority").unwrap() {
+                "HIGH" => (value = todo::Priority::HIGH),
+                "MEDIUM" => (value = todo::Priority::MEDIUM),
+                "LOW" => (value = todo::Priority::LOW),
+                _ => (),
+            };
+            data.set_priority(value_t!(matches, "id", u32).unwrap(), value);
+        }
+    }
+
+    if let Some(matches) = matches.subcommand_matches("set_s") {
+        if matches.is_present("id") && matches.is_present("state") {
+            let mut value = todo::State::TODO;
+            match matches.value_of("state").unwrap() {
+                "TODO" => (value = todo::State::TODO),
+                "PROGRESS" => (value = todo::State::PROGRESS),
+                "DONE" => (value = todo::State::DONE),
+                _ => (),
+            };
+            data.set_state(value_t!(matches, "id", u32).unwrap(), value);
+        }
+    }
+
     let file = File::create(path).unwrap();
     serde_json::to_writer(file, &data).unwrap();
 }
