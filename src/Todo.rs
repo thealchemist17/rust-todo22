@@ -1,7 +1,7 @@
 use chrono::prelude::*;
+use colored::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Data {
     next_id: u32,
@@ -81,11 +81,32 @@ pub struct Todo {
 }
 impl fmt::Display for Todo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}. {} {} {}",
-            self.id, self.text, self.state, self.priority,
-        )
+        match &self.state {
+            State::TODO => {
+                (write!(
+                    f,
+                    "{}. {} {} {}",
+                    self.id, self.text, self.state, self.priority,
+                ))
+            }
+            State::PROGRESS => {
+                (write!(
+                    f,
+                    "{}. {} {} {}",
+                    self.id,
+                    self.text.yellow(),
+                    self.state,
+                    self.priority,
+                ))
+            }
+            State::DONE => {
+                (write!(
+                    f,
+                    "{}. {} {} {}",
+                    self.id, self.text, self.state, self.priority,
+                ))
+            }
+        }
     }
 }
 

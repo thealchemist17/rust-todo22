@@ -75,7 +75,7 @@ fn main() {
 
     // list cmd
     if let Some(_) = matches.subcommand_matches("list") {
-        println!("{}", data);
+        print!("{}", data);
     }
 
     // edit cmd

@@ -18,25 +18,23 @@ fn it_runs() {
 
 #[test]
 fn it_add_todo() {
-    fn it_add_todo() {
-        let temp_file = get_temp_file();
-        // Call the command
-        let cmd = Command::cargo_bin("rust-todo22")
-            .unwrap()
-            .arg("-f")
-            .arg(temp_file.path())
-            .arg("add")
-            .arg("bufu")
-            .unwrap();
-        // Assert stdout
-        let contents = "added todo with id: 0\n";
-        cmd.assert().stdout(contents.to_string());
-        // Check that the todo text is in the file
-        let content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
-        let data: Value = serde_json::from_str(&content).unwrap();
-        assert_eq!(data["todos"][0]["text"], "bufu");
-        assert_eq!(data["todos"][0]["id"], 0);
-    }
+    let temp_file = get_temp_file();
+    // Call the command
+    let cmd = Command::cargo_bin("rust-todo22")
+        .unwrap()
+        .arg("-f")
+        .arg(temp_file.path())
+        .arg("add")
+        .arg("bufu")
+        .unwrap();
+    // Assert stdout
+    let contents = "added todo with id: 0\n";
+    cmd.assert().stdout(contents.to_string());
+    // Check that the todo text is in the file
+    let content = fs::read_to_string(temp_file.path()).expect("Failed to open file");
+    let data: Value = serde_json::from_str(&content).unwrap();
+    assert_eq!(data["todos"][0]["text"], "bufu");
+    assert_eq!(data["todos"][0]["id"], 0);
 }
 
 #[test]
@@ -50,7 +48,7 @@ fn it_list() {
         .arg(temp_file.path())
         .arg("list")
         .unwrap();
-    cmd.assert().stdout("0. bufu DONE MEDIUM\n\n");
+    cmd.assert().stdout("0. bufu DONE MEDIUM\n");
 }
 
 #[test]
