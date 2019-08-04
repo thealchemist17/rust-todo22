@@ -103,7 +103,10 @@ impl fmt::Display for Todo {
                 (write!(
                     f,
                     "{}. {} {} {}",
-                    self.id, self.text, self.state, self.priority,
+                    self.id,
+                    self.text.green(),
+                    self.state,
+                    self.priority,
                 ))
             }
         }

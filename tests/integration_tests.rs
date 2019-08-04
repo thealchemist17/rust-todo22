@@ -1,4 +1,5 @@
 use assert_cmd::prelude::*;
+use colored::*;
 use serde_json::Value;
 use std::fs;
 use std::io::Write;
@@ -48,7 +49,9 @@ fn it_list() {
         .arg(temp_file.path())
         .arg("list")
         .unwrap();
-    cmd.assert().stdout("0. bufu DONE MEDIUM\n");
+
+    let c = format!("0. {} DONE MEDIUM\n", "bufu".green());
+    cmd.assert().stdout(c);
 }
 
 #[test]
