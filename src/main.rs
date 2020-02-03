@@ -8,7 +8,7 @@ use std::path::Path;
 use todo::Data;
 fn main() {
     let matches = App::new("rust-todo22")
-        .version("1.0")
+        .version("0.1.2")
         .author("Luca Mancinelli <lucamancinelli17@gmail.com>")
         .about("rust-todo22")
         .subcommand(
